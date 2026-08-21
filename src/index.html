@@ -1,13 +1,32 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>PYSAngular</title>
-  <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-</head>
-<body>
-  <app-root></app-root>
-</body>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <title>PYS — Proje Yönetim Sistemi</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta
+      name="description"
+      content="PYS — Belediye Proje Yönetim Sistemi. Proje, personel, doküman ve dilekçe akışını tek panelden yönetir."
+    />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--
+      Çalışma zamanı ayarları (API adresi). Build çıktısının içinde yer aldığı için
+      yeniden derlemeden farklı bir sunucuya yönlendirilebilir. Bkz. public/assets/env.js
+    -->
+    <script src="assets/env.js"></script>
+  </head>
+
+  <body>
+    <app-root></app-root>
+  </body>
 </html>

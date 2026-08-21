@@ -1,0 +1,160 @@
+<p-toast />
+
+<div class="card">
+  <h2 class="text-lg font-semibold mb-4">Dilekçe Başvuruları</h2>
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <button
+        pButton
+        type="button"
+        label="{{ showApproved ? 'Tümü' : 'Sadece Güncel (Bekleyenler)' }}"
+        (click)="toggleShowApproved()"
+      ></button>
+    </div>
+    <div class="text-sm text-slate-500">Toplam: {{ visiblePetitions.length }}</div>
+  </div>
+
+  @if (loading) {
+    <div class="text-center text-slate-500 py-8">Yükleniyor...</div>
+  }
+
+  @if (!loading && visiblePetitions.length === 0) {
+    <div class="text-center text-slate-400 py-6">Görüntülenecek dilekçe yok.</div>
+  }
+
+  @if (!loading && visiblePetitions.length > 0) {
+    <div class="flex flex-col gap-4">
+      @for (p of visiblePetitions; track p.id) {
+        <div
+          class="border border-slate-200 rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-shadow"
+        >
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-3">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  {{ subjectLabel(p.subject) }}
+                </div>
+                <div class="w-1 h-1 rounded-full bg-slate-300"></div>
+                <div class="text-xs font-semibold text-indigo-600">
+                  <i class="fa-solid fa-user mr-1"></i>{{ p.user?.fullName || p.userId }}
+                </div>
+              </div>
+              <h3 class="text-lg font-bold text-slate-900">{{ p.title }}</h3>
+            </div>
+            <div class="flex items-center gap-3 mt-2 md:mt-0">
+              <span class="text-sm text-slate-500"
+                ><i class="fa-regular fa-clock mr-1"></i
+                >{{ p.createdAt | date: 'dd.MM.yyyy HH:mm' }}</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-bold"
+                [ngClass]="{
+                  'bg-amber-100 text-amber-800': p.status === 'Pending',
+                  'bg-emerald-100 text-emerald-800': p.status === 'Approved',
+                  'bg-rose-100 text-rose-800': p.status === 'Rejected',
+                }"
+              >
+                {{ statusLabel(p.status) }}
+              </span>
+            </div>
+          </div>
+          <div
+            class="text-slate-700 text-sm whitespace-pre-line mb-4 p-4 bg-slate-50 rounded-lg border border-slate-100"
+          >
+            {{ p.content }}
+          </div>
+          @if (p.attachments.length) {
+            <div
+              class="mb-4 text-xs text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100"
+            >
+              <div class="font-semibold text-slate-700 mb-1">
+                <i class="fa-solid fa-paperclip mr-1"></i>Ekler:
+              </div>
+              <ul class="list-disc list-inside">
+                @for (a of p.attachments; track a) {
+                  <li>{{ a }}</li>
+                }
+              </ul>
+            </div>
+          }
+          @if (p.status === 'Pending') {
+            <div class="flex items-center gap-2 mb-4">
+              <button
+                pButton
+                type="button"
+                class="p-button-sm p-button-success p-button-outlined"
+                icon="fa-solid fa-check"
+                label="Onayla"
+                (click)="approve(p.id)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                class="p-button-sm p-button-danger p-button-outlined ml-2"
+                icon="fa-solid fa-xmark"
+                label="Reddet"
+                (click)="reject(p.id)"
+              ></button>
+            </div>
+          }
+          <div class="border-t border-slate-100 pt-4 mt-2">
+            <div class="flex justify-between items-center mb-3">
+              <h4 class="text-sm font-semibold text-slate-800">
+                <i class="fa-regular fa-comments mr-2 text-indigo-500"></i>Mesajlar & Yanıtlar
+              </h4>
+              @if (!messages[p.id]) {
+                <button
+                  pButton
+                  type="button"
+                  class="p-button-sm p-button-text p-button-rounded"
+                  (click)="loadMessages(p.id)"
+                >
+                  Konuşmayı Yükle
+                </button>
+              }
+            </div>
+            @if (messages[p.id]) {
+              <div>
+                @if (messages[p.id].length) {
+                  <div class="flex flex-col gap-3 mb-4">
+                    @for (m of messages[p.id]; track m.id) {
+                      <div class="bg-indigo-50/50 p-3 rounded-lg border border-indigo-100/50">
+                        <div class="flex justify-between items-center mb-1">
+                          <span class="text-xs font-bold text-indigo-900">{{ m.authorName }}</span>
+                          <span class="text-[10px] text-slate-500">{{
+                            m.createdAt | date: 'dd.MM.yyyy HH:mm'
+                          }}</span>
+                        </div>
+                        <div class="text-sm text-slate-700">{{ m.content }}</div>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="text-sm text-slate-400 italic mb-4">Henüz bir mesaj bulunmuyor.</div>
+                }
+                <div class="flex gap-2">
+                  <input
+                    type="text"
+                    pInputText
+                    [(ngModel)]="newMessageText[p.id]"
+                    maxlength="500"
+                    placeholder="Yanıt yazın..."
+                    class="flex-grow p-inputtext-sm w-full border rounded px-3"
+                    (keydown.enter)="sendMessage(p.id)"
+                  />
+                  <button
+                    pButton
+                    type="button"
+                    label="Gönder"
+                    (click)="sendMessage(p.id)"
+                    class="p-button-sm p-button-primary"
+                  ></button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

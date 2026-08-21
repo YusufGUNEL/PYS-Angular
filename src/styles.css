@@ -1,3 +1,66 @@
-/* You can add global styles to this file, and also import other style files */
+/**
+ * Global stiller. Bileşene özel kurallar ilgili *.css dosyasında durur.
+ *
+ * Tema CSS'i burada import edilmez; PrimeNG 21'de tema `providePrimeNG()`
+ * üzerinden (app.config.ts) yüklenir.
+ */
 
 @import 'tailwindcss';
+@import '@fortawesome/fontawesome-free/css/all.min.css';
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', 'Segoe UI', Roboto, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Arama kutularında ikon ile metnin çakışmaması için ortak ölçüler. */
+.search-input {
+  height: 2.75rem;
+  padding-left: 3.25rem !important;
+}
+
+.search-icon {
+  pointer-events: none;
+}
+
+/* Klavyeyle gezinirken odak her zaman görünür kalsın (erişilebilirlik). */
+:focus-visible {
+  outline: 2px solid var(--p-primary-color, #4f46e5);
+  outline-offset: 2px;
+}
+
+/**
+ * PrimeNG ince ayarları.
+ * Bu kurallar birden fazla ekranda kullanıldığı ve ilgili elemanlar (takvim
+ * paneli gibi) <body> altına taşındığı için bileşen CSS'i yerine burada durur.
+ */
+
+/* Tabloların başlık satırı — Tailwind slate paletiyle uyumlu. */
+.p-datatable .p-datatable-thead > tr > th {
+  background-color: #f8fafc;
+  color: #334155;
+  font-weight: 600;
+}
+
+/* Kendi tetikleyici butonu olan tarih seçicilerde alanı gizler, paneli açık bırakır. */
+.hidden-datepicker {
+  position: absolute !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+}
+
+.p-datepicker {
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  box-shadow:
+    0 10px 25px -5px rgb(0 0 0 / 0.1),
+    0 8px 10px -6px rgb(0 0 0 / 0.1);
+}

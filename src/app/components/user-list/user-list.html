@@ -1,0 +1,179 @@
+<!--
+=============================================================================
+DOSYA: user-list.html (UserList Component Template)
+AMAÇ: Kullanıcıları listeleme, silme onay penceresi ve güncelleme formu.
+=============================================================================
+-->
+
+<p-toast />
+
+<div class="flex flex-col gap-6">
+  <!-- Başlık -->
+  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <h2 class="text-2xl md:text-3xl font-bold text-slate-800 flex items-center gap-3">
+        <i class="fa-solid fa-users text-blue-600"></i>
+        Kullanıcı Listesi
+      </h2>
+      <p class="text-slate-500 mt-1">Sistemdeki tüm personelin listesi</p>
+    </div>
+    <div class="relative w-full md:w-80">
+      <i
+        class="fa-solid fa-magnifying-glass search-icon absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+      ></i>
+      <input
+        pInputText
+        type="text"
+        class="w-full search-input"
+        placeholder="Genel arama"
+        #globalUserFilter
+        (input)="usersTable.filterGlobal(globalUserFilter.value, 'contains')"
+        autocomplete="off"
+      />
+    </div>
+  </div>
+
+  <!-- ─── PRİMENG TABLO (Listeleme) ─────────────────────────────────────── -->
+  <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+    <p-table
+      #usersTable
+      [value]="users"
+      [loading]="loading"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[5, 10, 20]"
+      [filterDelay]="0"
+      [globalFilterFields]="['fullName', 'title', 'email', 'role.name']"
+      styleClass="p-datatable-striped p-datatable-sm"
+      responsiveLayout="scroll"
+    >
+      <!-- Tablo Başlıkları -->
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Ad Soyad</th>
+          <th>Unvan</th>
+          <th>E-posta</th>
+          <th>Rol</th>
+          <th>Uzmanlık Alanı</th>
+          <th class="text-center">İşlemler</th>
+        </tr>
+        <tr>
+          <th>
+            <input
+              pInputText
+              type="text"
+              class="w-full p-inputtext-sm"
+              placeholder="Ad ara"
+              #nameFilter
+              (input)="usersTable.filter(nameFilter.value, 'fullName', 'contains')"
+              autocomplete="off"
+            />
+          </th>
+          <th>
+            <input
+              pInputText
+              type="text"
+              class="w-full p-inputtext-sm"
+              placeholder="Unvan ara"
+              #titleFilter
+              (input)="usersTable.filter(titleFilter.value, 'title', 'contains')"
+              autocomplete="off"
+            />
+          </th>
+          <th>
+            <input
+              pInputText
+              type="text"
+              class="w-full p-inputtext-sm"
+              placeholder="E-posta ara"
+              #emailFilter
+              (input)="usersTable.filter(emailFilter.value, 'email', 'contains')"
+              autocomplete="off"
+            />
+          </th>
+          <th>
+            <input
+              pInputText
+              type="text"
+              class="w-full p-inputtext-sm"
+              placeholder="Rol ara"
+              #roleFilter
+              (input)="usersTable.filter(roleFilter.value, 'role.name', 'contains')"
+              autocomplete="off"
+            />
+          </th>
+          <th>
+            <!-- Çoklu alanlı dizilerde p-table'ın built-in filter'ı doğrudan dot-path
+                      desteklemiyor; arama için "Genel arama" kutusunu kullanmak yeterli. -->
+          </th>
+          <th></th>
+        </tr>
+      </ng-template>
+
+      <!-- Tablo Verileri -->
+      <ng-template pTemplate="body" let-user>
+        <tr>
+          <td class="font-semibold text-gray-800">{{ user.fullName }}</td>
+          <td class="text-gray-600">{{ user.title }}</td>
+          <td class="text-gray-600">{{ user.email }}</td>
+          <!-- Rol Nesnesinin İçindeki name -->
+          <td>
+            <span
+              class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded border border-blue-400"
+            >
+              {{ user.role?.name || user.role?.roleName || '-' }}
+            </span>
+          </td>
+          <!-- Çoklu uzmanlık alanları → chip listesi -->
+          <td>
+            <div class="flex flex-wrap gap-1">
+              @for (area of user.expertiseAreas ?? []; track area.id) {
+                <span
+                  class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded border border-green-400"
+                >
+                  {{ area.expertiseName }}
+                </span>
+              }
+              @if (!user.expertiseAreas?.length) {
+                <span class="text-gray-400 italic text-xs">—</span>
+              }
+            </div>
+          </td>
+          <!-- İşlem Butonları (Güncelle / Sil) -->
+          <td class="text-center">
+            <div class="flex items-center justify-center gap-2">
+              <button
+                pButton
+                type="button"
+                icon="fa-solid fa-pen-to-square"
+                class="p-button-rounded p-button-text p-button-secondary"
+                pTooltip="Düzenle"
+                tooltipPosition="top"
+                aria-label="Düzenle"
+                (click)="openEditModal(user)"
+              ></button>
+
+              <button
+                pButton
+                type="button"
+                icon="fa-solid fa-trash-can"
+                class="p-button-rounded p-button-text p-button-danger"
+                pTooltip="Sil"
+                tooltipPosition="top"
+                aria-label="Sil"
+                (click)="deleteUser(user)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Veri Yoksa -->
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center p-4 text-gray-500">Kayıtlı kullanıcı bulunamadı.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

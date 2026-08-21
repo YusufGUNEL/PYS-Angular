@@ -1,0 +1,260 @@
+<p-toast />
+
+<div class="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-4 h-[calc(100vh-220px)]">
+  <!-- ─── Sol Panel: Oda Listesi ─────────────────────────────── -->
+  <aside
+    class="bg-white rounded-2xl shadow-lg border border-slate-100 flex flex-col overflow-hidden"
+  >
+    <header class="p-4 border-b border-slate-100 flex flex-col gap-2">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+          <i class="fa-solid fa-comments text-indigo-600"></i>
+          Sohbetler
+        </h3>
+        <div class="flex items-center gap-1">
+          <button
+            pButton
+            type="button"
+            icon="fa-solid fa-pen-to-square"
+            class="p-button-rounded p-button-text p-button-sm"
+            pTooltip="Yeni Sohbet"
+            aria-label="Yeni Sohbet"
+            tooltipPosition="bottom"
+            (click)="toggleStartChat()"
+          ></button>
+          <button
+            pButton
+            type="button"
+            icon="fa-solid fa-users"
+            class="p-button-rounded p-button-text p-button-sm"
+            pTooltip="Yeni Grup"
+            aria-label="Yeni Grup"
+            tooltipPosition="bottom"
+            (click)="openNewGroup()"
+          ></button>
+        </div>
+      </div>
+      <div class="relative">
+        <i
+          class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"
+        ></i>
+        <input
+          pInputText
+          [(ngModel)]="roomSearch"
+          (ngModelChange)="applyRoomFilter()"
+          class="w-full pl-9 py-2 text-sm"
+          placeholder="Sohbet ara..."
+        />
+      </div>
+    </header>
+
+    <!-- Yeni sohbet paneli (genişleyebilir liste) -->
+    @if (showStartChatPanel) {
+      <div class="border-b border-slate-100 max-h-72 overflow-y-auto bg-slate-50">
+        <div class="p-3 sticky top-0 bg-slate-50 border-b border-slate-100">
+          <input
+            pInputText
+            [(ngModel)]="startChatSearch"
+            class="w-full text-sm"
+            placeholder="Personel ara..."
+          />
+        </div>
+        @for (u of filteredStartUsers(); track u.id) {
+          <div
+            role="button"
+            tabindex="0"
+            (click)="startDirect(u)"
+            (keydown.enter)="startDirect(u)"
+            (keydown.space)="startDirect(u)"
+            class="flex items-center gap-3 px-3 py-2 hover:bg-white cursor-pointer"
+          >
+            <div
+              class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm"
+            >
+              {{ initials(u.fullName) }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold text-slate-800 truncate">{{ u.fullName }}</div>
+              <div class="text-xs text-slate-500 truncate">{{ u.title || '—' }}</div>
+            </div>
+          </div>
+        }
+        @if (filteredStartUsers().length === 0) {
+          <div class="text-center text-xs text-slate-400 italic p-4">Personel bulunamadı.</div>
+        }
+      </div>
+    }
+
+    <!-- Oda listesi -->
+    <div class="flex-1 overflow-y-auto">
+      @if (loadingRooms) {
+        <div class="text-center text-slate-400 py-8 text-sm">
+          <i class="fa-solid fa-spinner fa-spin"></i> Yükleniyor...
+        </div>
+      } @else {
+        @if (filteredRooms.length === 0) {
+          <div class="text-center text-slate-400 italic py-8 text-sm">
+            Henüz sohbet yok.<br />"Yeni Sohbet" ile başlayın.
+          </div>
+        }
+        @for (room of filteredRooms; track room.id) {
+          <div
+            role="button"
+            tabindex="0"
+            (click)="selectRoom(room)"
+            (keydown.enter)="selectRoom(room)"
+            (keydown.space)="selectRoom(room)"
+            [class.bg-indigo-50]="selectedRoom?.id === room.id"
+            class="flex items-center gap-3 px-3 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-50"
+          >
+            <!-- Avatar -->
+            <div
+              class="w-11 h-11 rounded-full flex items-center justify-center font-bold text-white shrink-0"
+              [ngClass]="room.isGroup ? 'bg-emerald-500' : 'bg-indigo-500'"
+            >
+              @if (room.isGroup) {
+                <i class="fa-solid fa-users text-sm"></i>
+              }
+              @if (!room.isGroup) {
+                <span>{{ initials(roomDisplayName(room)) }}</span>
+              }
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-slate-800 truncate text-sm">{{
+                  roomDisplayName(room)
+                }}</span>
+                @if (room.lastMessage) {
+                  <span class="text-[10px] text-slate-400 ml-2 shrink-0">
+                    {{ room.lastMessage.createdAt | date: 'HH:mm' }}
+                  </span>
+                }
+              </div>
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs text-slate-500 truncate">
+                  @if (room.lastMessage) {
+                    {{ room.lastMessage.senderName }}: {{ room.lastMessage.content || '(ek)' }}
+                  } @else {
+                    <span class="italic text-slate-400">{{
+                      roomSubtitle(room) || 'Sohbet başlat...'
+                    }}</span>
+                  }
+                </span>
+                @if (room.unreadCount > 0) {
+                  <span
+                    class="bg-indigo-600 text-white text-[10px] font-bold rounded-full px-2 py-0.5 shrink-0"
+                  >
+                    {{ room.unreadCount }}
+                  </span>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </aside>
+
+  <!-- ─── Sağ Panel: Konuşma ────────────────────────────────── -->
+  <section
+    class="bg-white rounded-2xl shadow-lg border border-slate-100 flex flex-col overflow-hidden"
+  >
+    @if (!selectedRoom) {
+      <div class="flex-1 flex flex-col items-center justify-center text-slate-400 p-8">
+        <i class="fa-solid fa-comments text-6xl mb-4"></i>
+        <p class="text-center">
+          Sol taraftan bir sohbet seçin veya<br />"Yeni Sohbet" ile başlayın.
+        </p>
+      </div>
+    } @else {
+      <!-- Header -->
+      <header class="px-5 py-3 border-b border-slate-100 flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white"
+          [ngClass]="selectedRoom.isGroup ? 'bg-emerald-500' : 'bg-indigo-500'"
+        >
+          @if (selectedRoom.isGroup) {
+            <i class="fa-solid fa-users text-sm"></i>
+          } @else {
+            <span>{{ initials(roomDisplayName(selectedRoom)) }}</span>
+          }
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold text-slate-800 truncate">{{ roomDisplayName(selectedRoom) }}</div>
+          <div class="text-xs text-slate-500">{{ roomSubtitle(selectedRoom) }}</div>
+        </div>
+        @if (selectedRoom.isGroup) {
+          <p-tag value="Grup" severity="success"></p-tag>
+        }
+      </header>
+      <!-- Messages -->
+      <div class="flex-1 overflow-y-auto p-4 bg-slate-50">
+        @if (loadingMessages) {
+          <div class="text-center text-slate-400 py-8">
+            <i class="fa-solid fa-spinner fa-spin"></i> Mesajlar yükleniyor...
+          </div>
+        }
+        @if (!loadingMessages && messages.length === 0) {
+          <div class="text-center text-slate-400 italic py-8">
+            Henüz mesaj yok. İlk selamı sen ver! 👋
+          </div>
+        }
+        @for (m of messages; track m.id) {
+          <div class="mb-3 flex" [class.justify-end]="isMine(m.senderId)">
+            <div class="max-w-[70%]">
+              @if (selectedRoom.isGroup && !isMine(m.senderId)) {
+                <div class="text-[10px] font-semibold text-indigo-600 px-3 mb-0.5">
+                  {{ m.senderName }}
+                </div>
+              }
+              <div
+                class="rounded-2xl px-4 py-2 shadow-sm break-words"
+                [ngClass]="
+                  isMine(m.senderId)
+                    ? 'bg-indigo-600 text-white rounded-br-sm'
+                    : 'bg-white text-slate-800 border border-slate-100 rounded-bl-sm'
+                "
+              >
+                <div class="whitespace-pre-wrap text-sm">{{ m.content }}</div>
+                <div
+                  class="text-[10px] mt-1 text-right"
+                  [ngClass]="isMine(m.senderId) ? 'text-indigo-200' : 'text-slate-400'"
+                >
+                  {{ m.createdAt | date: 'HH:mm' }}
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+        <!-- Yazıyor göstergesi -->
+        @if (selectedRoom && typingByRoom[selectedRoom.id]; as t) {
+          <div class="text-xs text-slate-400 italic px-2">
+            <i class="fa-solid fa-pen-clip"></i> {{ t.name }} yazıyor...
+          </div>
+        }
+        <div #messagesEnd></div>
+      </div>
+      <!-- Composer -->
+      <footer class="p-3 border-t border-slate-100 flex items-center gap-2">
+        <input
+          pInputText
+          [(ngModel)]="messageInput"
+          (input)="onInputType()"
+          (keydown.enter)="sendMessage()"
+          placeholder="Mesajınızı yazın..."
+          maxlength="4000"
+          class="flex-1 py-2"
+        />
+        <button
+          pButton
+          type="button"
+          icon="fa-solid fa-paper-plane"
+          aria-label="Mesajı gönder"
+          class="p-button-rounded"
+          [disabled]="!messageInput.trim()"
+          (click)="sendMessage()"
+        ></button>
+      </footer>
+    }
+  </section>
+</div>

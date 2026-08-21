@@ -1,0 +1,94 @@
+<p-toast />
+
+<form [formGroup]="form" (ngSubmit)="save()" class="flex flex-col gap-4">
+  <div>
+    <div class="flex items-center justify-between mb-1">
+      <label for="name" class="block text-sm font-semibold text-slate-700"
+        >Grup Adı <span class="text-red-500">*</span></label
+      >
+      <span
+        class="text-xs"
+        [ngClass]="
+          (form.get('name')?.value?.length || 0) > 90 ? 'text-red-500 font-bold' : 'text-slate-400'
+        "
+      >
+        {{ form.get('name')?.value?.length || 0 }} / 100
+      </span>
+    </div>
+    <input
+      id="name"
+      pInputText
+      type="text"
+      formControlName="name"
+      maxlength="100"
+      class="w-full py-2 rounded-lg"
+      placeholder="Örn: BT Ekip Sohbeti"
+    />
+    @if (form.get('name')?.touched && form.get('name')?.errors; as e) {
+      <small class="text-red-500 block mt-1">
+        @if (e['required']) {
+          <span>Grup adı zorunludur.</span>
+        }
+        @if (e['minlength']) {
+          <span>En az 2 karakter olmalıdır.</span>
+        }
+        @if (e['maxlength']) {
+          <span>100 karakteri geçemez.</span>
+        }
+      </small>
+    }
+  </div>
+
+  <div>
+    <label for="memberIds" class="block text-sm font-semibold text-slate-700 mb-1">
+      Üyeler <span class="text-red-500">*</span>
+      <span class="text-xs font-normal text-slate-400 ml-1">(çoklu seçim — en az 1)</span>
+    </label>
+    <p-multiselect
+      inputId="memberIds"
+      [options]="users"
+      formControlName="memberIds"
+      optionLabel="fullName"
+      optionValue="id"
+      display="chip"
+      [filter]="true"
+      filterPlaceholder="Personel ara..."
+      [showClear]="true"
+      placeholder="Eklenecek üyeleri seçin..."
+      [style]="{ width: '100%' }"
+    >
+      <ng-template pTemplate="item" let-user>
+        <div class="flex flex-col py-1">
+          <span class="font-semibold text-slate-800">{{ user.fullName }}</span>
+          <span class="text-xs text-slate-500">{{ user.title || '—' }}</span>
+        </div>
+      </ng-template>
+    </p-multiselect>
+    @if (form.get('memberIds')?.touched && form.get('memberIds')?.errors; as e) {
+      <small class="text-red-500 block mt-1">
+        @if (e['required'] || e['minSelected']) {
+          <span>En az bir üye seçmelisiniz.</span>
+        }
+      </small>
+    }
+  </div>
+
+  <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+    <button
+      pButton
+      type="button"
+      label="Vazgeç"
+      icon="fa-solid fa-xmark"
+      class="p-button-text"
+      (click)="cancel()"
+    ></button>
+    <button
+      pButton
+      type="submit"
+      label="Grubu Oluştur"
+      icon="fa-solid fa-users"
+      [loading]="saving"
+      [disabled]="form.invalid || saving"
+    ></button>
+  </div>
+</form>

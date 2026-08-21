@@ -1,0 +1,99 @@
+<p-toast />
+
+<div class="min-h-[70vh] flex items-center justify-center px-4">
+  <div class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-100 p-8">
+    <div class="mb-6">
+      <h2 class="text-3xl font-bold text-slate-800">Giriş Yap</h2>
+      <p class="text-slate-500 mt-1">Hesabınızla sisteme giriş yapın.</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+      <div>
+        <div class="flex items-center justify-between">
+          <label for="email" class="text-sm text-slate-600">E-posta</label>
+          <span
+            class="text-xs"
+            [ngClass]="
+              (form.get('email')?.value?.length || 0) > 140
+                ? 'text-red-500 font-bold'
+                : 'text-gray-400'
+            "
+          >
+            {{ form.get('email')?.value?.length || 0 }} / 150
+          </span>
+        </div>
+        <input
+          id="email"
+          pInputText
+          type="email"
+          formControlName="email"
+          class="w-full mt-1"
+          maxlength="150"
+          placeholder="ornek@kurum.gov.tr"
+        />
+        @if (form.get('email')?.touched && form.get('email')?.errors; as e) {
+          <small class="text-red-500 block mt-1">
+            @if (e['required']) {
+              <span>E-posta zorunludur.</span>
+            }
+            @if (e['email'] || e['pattern']) {
+              <span>Geçerli bir e-posta giriniz.</span>
+            }
+            @if (e['maxlength']) {
+              <span>E-posta 150 karakteri geçemez.</span>
+            }
+          </small>
+        }
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between">
+          <label for="password" class="text-sm text-slate-600">Şifre</label>
+          <span
+            class="text-xs"
+            [ngClass]="
+              (form.get('password')?.value?.length || 0) > 65
+                ? 'text-red-500 font-bold'
+                : 'text-gray-400'
+            "
+          >
+            {{ form.get('password')?.value?.length || 0 }} / 72
+          </span>
+        </div>
+        <div class="relative">
+          <input
+            id="password"
+            pInputText
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
+            class="w-full mt-1 pr-10"
+            maxlength="72"
+          />
+          <button
+            type="button"
+            [attr.aria-label]="showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'"
+            (click)="showPassword = !showPassword"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+          >
+            <i [class]="showPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+          </button>
+        </div>
+        @if (form.get('password')?.touched && form.get('password')?.errors; as e) {
+          <small class="text-red-500 block mt-1">
+            @if (e['required']) {
+              <span>Şifre zorunludur.</span>
+            }
+            @if (e['minlength']) {
+              <span>Şifre en az 6 karakter olmalı.</span>
+            }
+            @if (e['maxlength']) {
+              <span>Şifre 72 karakteri geçemez.</span>
+            }
+          </small>
+        }
+      </div>
+
+      <button pButton type="submit" label="Giriş" class="w-full" [loading]="loading"></button>
+    </form>
+  </div>
+</div>

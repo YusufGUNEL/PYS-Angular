@@ -1,0 +1,277 @@
+<p-toast />
+
+<div class="card">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-lg font-semibold">Gönderdiğim Dilekçeler</h2>
+    <button
+      pButton
+      type="button"
+      label="Dilekçe Gönder"
+      class="p-button-primary"
+      (click)="openCreate()"
+    ></button>
+  </div>
+
+  @if (loading) {
+    <div class="text-center text-slate-500 py-8">Yükleniyor...</div>
+  }
+
+  @if (!loading && petitions.length === 0) {
+    <div class="text-center text-slate-400 py-6">Henüz gönderilmiş dilekçe yok.</div>
+  }
+
+  @if (!loading && petitions.length > 0) {
+    <div class="flex flex-col gap-4">
+      @for (p of petitions; track p.id) {
+        <div
+          class="border border-slate-200 rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-shadow"
+        >
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-3">
+            <div>
+              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                {{ subjectLabel(p.subject) }}
+              </div>
+              <h3 class="text-lg font-bold text-slate-900">{{ p.title }}</h3>
+            </div>
+            <div class="flex items-center gap-3 mt-2 md:mt-0">
+              <span class="text-sm text-slate-500"
+                ><i class="fa-regular fa-clock mr-1"></i
+                >{{ p.createdAt | date: 'dd.MM.yyyy HH:mm' }}</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-bold"
+                [ngClass]="{
+                  'bg-amber-100 text-amber-800': p.status === 'Pending',
+                  'bg-emerald-100 text-emerald-800': p.status === 'Approved',
+                  'bg-rose-100 text-rose-800': p.status === 'Rejected',
+                }"
+              >
+                {{ statusLabel(p.status) }}
+              </span>
+            </div>
+          </div>
+          <div
+            class="text-slate-700 text-sm whitespace-pre-line mb-4 p-4 bg-slate-50 rounded-lg border border-slate-100"
+          >
+            {{ p.content }}
+          </div>
+          <div class="border-t border-slate-100 pt-4 mt-2">
+            <div class="flex justify-between items-center mb-3">
+              <h4 class="text-sm font-semibold text-slate-800">
+                <i class="fa-regular fa-comments mr-2 text-indigo-500"></i>Mesajlar & Yanıtlar
+              </h4>
+              @if (!messages[p.id]) {
+                <button
+                  pButton
+                  type="button"
+                  class="p-button-sm p-button-text p-button-rounded"
+                  (click)="loadMessages(p.id)"
+                >
+                  Konuşmayı Yükle
+                </button>
+              }
+            </div>
+            @if (messages[p.id]) {
+              <div>
+                @if (messages[p.id].length) {
+                  <div class="flex flex-col gap-3 mb-4">
+                    @for (m of messages[p.id]; track m.id) {
+                      <div class="bg-indigo-50/50 p-3 rounded-lg border border-indigo-100/50">
+                        <div class="flex justify-between items-center mb-1">
+                          <span class="text-xs font-bold text-indigo-900">{{ m.authorName }}</span>
+                          <span class="text-[10px] text-slate-500">{{
+                            m.createdAt | date: 'dd.MM.yyyy HH:mm'
+                          }}</span>
+                        </div>
+                        <div class="text-sm text-slate-700">{{ m.content }}</div>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="text-sm text-slate-400 italic mb-4">Henüz bir mesaj bulunmuyor.</div>
+                }
+                <div class="flex gap-2">
+                  <input
+                    type="text"
+                    pInputText
+                    [(ngModel)]="newMessageText[p.id]"
+                    maxlength="500"
+                    placeholder="Yanıt yazın..."
+                    class="flex-grow p-inputtext-sm w-full border rounded px-3"
+                    (keydown.enter)="sendMessage(p.id)"
+                  />
+                  <button
+                    pButton
+                    type="button"
+                    label="Gönder"
+                    (click)="sendMessage(p.id)"
+                    class="p-button-sm p-button-primary"
+                  ></button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Popup: Yeni Dilekçe -->
+@if (showCreate) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-6 w-full max-w-3xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-semibold">Dilekçe Gönder</h3>
+        <button
+          type="button"
+          class="text-slate-500"
+          aria-label="Pencereyi kapat"
+          (click)="closeCreate()"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form [formGroup]="form" (ngSubmit)="submitNewPetition()">
+        <div class="mb-4">
+          <label for="subject" class="block text-sm font-semibold mb-1"
+            >Konu <span class="text-red-500">*</span></label
+          >
+          <p-select
+            inputId="subject"
+            [options]="subjects"
+            formControlName="subject"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Konu seçin"
+          ></p-select>
+          @if (form.get('subject')?.touched && form.get('subject')?.errors?.['required']) {
+            <small class="text-red-500 block mt-1"> Konu seçimi zorunludur. </small>
+          }
+        </div>
+        <div class="mb-4">
+          <div class="flex items-center justify-between mb-1">
+            <label for="title" class="block text-sm font-semibold"
+              >Başlık <span class="text-red-500">*</span></label
+            >
+            <span class="text-xs text-slate-400"
+              >{{ form.get('title')?.value?.length || 0 }} / 150</span
+            >
+          </div>
+          <input
+            id="title"
+            type="text"
+            pInputText
+            formControlName="title"
+            maxlength="150"
+            placeholder="Örn: Rol değişikliği talebi"
+            class="w-full py-2 rounded-lg"
+          />
+          @if (form.get('title')?.touched && form.get('title')?.errors; as e) {
+            <small class="text-red-500 block mt-1">
+              @if (e['required']) {
+                <span>Başlık zorunludur.</span>
+              }
+              @if (e['minlength']) {
+                <span>Başlık en az 3 karakter olmalıdır.</span>
+              }
+              @if (e['maxlength']) {
+                <span>Başlık 150 karakteri geçemez.</span>
+              }
+              @if (e['blank']) {
+                <span>Başlık sadece boşluk olamaz.</span>
+              }
+            </small>
+          }
+        </div>
+        <div class="mb-4">
+          <div class="flex items-center justify-between mb-1">
+            <label for="content" class="block text-sm font-semibold"
+              >İçerik <span class="text-red-500">*</span></label
+            >
+            <span class="text-xs text-slate-400"
+              >{{ form.get('content')?.value?.length || 0 }} / 2000</span
+            >
+          </div>
+          <textarea
+            id="content"
+            formControlName="content"
+            rows="6"
+            maxlength="2000"
+            placeholder="Talebinizi detaylıca yazın (en az 10 karakter)..."
+            class="w-full p-2 rounded-lg border"
+          ></textarea>
+          @if (form.get('content')?.touched && form.get('content')?.errors; as e) {
+            <small class="text-red-500 block mt-1">
+              @if (e['required']) {
+                <span>İçerik zorunludur.</span>
+              }
+              @if (e['minlength']) {
+                <span>İçerik en az 10 karakter olmalıdır.</span>
+              }
+              @if (e['maxlength']) {
+                <span>İçerik 2000 karakteri geçemez.</span>
+              }
+              @if (e['blank']) {
+                <span>İçerik sadece boşluk olamaz.</span>
+              }
+            </small>
+          }
+        </div>
+        <div class="mb-4">
+          <span class="block text-sm font-semibold mb-1"
+            >Dosya Ekle
+            <span class="text-slate-400 font-normal"
+              >(isteğe bağlı, en fazla 10 MB / dosya)</span
+            ></span
+          >
+          <p-fileupload
+            mode="basic"
+            chooseLabel="Dosya Seç"
+            [multiple]="true"
+            accept="image/*,.pdf,.doc,.docx,.xlsx,.xls,.zip,.txt"
+            maxFileSize="10485760"
+            [auto]="true"
+            (onSelect)="onPrimeFileSelect($event)"
+            styleClass="w-full"
+          ></p-fileupload>
+          @if (files.length) {
+            <div class="mt-2 flex flex-col gap-1 text-sm text-slate-600">
+              @for (f of files; track f.name; let i = $index) {
+                <div class="flex items-center justify-between gap-2 bg-slate-50 px-2 py-1 rounded">
+                  <span class="truncate"
+                    ><i class="fa-solid fa-paperclip text-slate-400 mr-1"></i>{{ f.name }}</span
+                  >
+                  <button
+                    pButton
+                    type="button"
+                    icon="fa-solid fa-xmark"
+                    class="p-button-rounded p-button-text p-button-danger p-button-sm"
+                    title="Kaldır"
+                    (click)="removeAttachment(i)"
+                  ></button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+        <div class="flex justify-end gap-2 mt-4">
+          <button
+            pButton
+            type="button"
+            label="Vazgeç"
+            class="p-button-text"
+            (click)="closeCreate()"
+          ></button>
+          <button
+            pButton
+            type="submit"
+            label="Gönder"
+            [loading]="saving"
+            [disabled]="form.invalid || saving"
+          ></button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

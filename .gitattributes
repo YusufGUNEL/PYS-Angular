@@ -1,0 +1,13 @@
+# Depoda satır sonları her zaman LF olsun; Windows'ta çalışma kopyası CRLF olabilir.
+# CI (Linux) `prettier --check` çalıştırdığı için bu belirlilik şart.
+* text=auto eol=lf
+
+# İkili dosyalara dokunma.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary

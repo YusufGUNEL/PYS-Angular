@@ -1,0 +1,516 @@
+<p-toast />
+
+<div class="flex flex-col items-center justify-center w-full mt-2">
+  <!-- Form Kartı -->
+  <div class="bg-white rounded-2xl shadow-xl p-8 max-w-4xl w-full">
+    <!-- Sayfa Başlığı -->
+    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+      <i class="fa-solid fa-diagram-project text-indigo-600"></i>
+      {{ auth.isAdmin() ? 'Yeni Proje Oluştur' : 'Yeni Proje Öner' }}
+    </h2>
+
+    <!-- Form İçeriği -->
+    <form [formGroup]="projectForm" (ngSubmit)="onSubmit()" class="p-0">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+        <!-- 1. Kolon: Temel Bilgiler -->
+        <div class="space-y-6">
+          <!-- Proje Adı -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label for="projectName" class="block text-sm font-semibold text-gray-700"
+                >Proje Adı <span class="text-red-500">*</span></label
+              >
+              <span
+                class="text-xs"
+                [ngClass]="
+                  (projectForm.get('projectName')?.value?.length || 0) > 140
+                    ? 'text-red-500 font-bold'
+                    : 'text-gray-400'
+                "
+              >
+                {{ projectForm.get('projectName')?.value?.length || 0 }} / 150
+              </span>
+            </div>
+            <div class="relative flex items-center">
+              <i class="fa-solid fa-heading absolute left-4 text-gray-400 z-10"></i>
+              <input
+                id="projectName"
+                type="text"
+                pInputText
+                formControlName="projectName"
+                maxlength="150"
+                class="w-full !pl-14 py-3 border-slate-200 focus:border-blue-500 rounded-xl transition-all"
+                placeholder="Akıllı Şehir Altyapısı"
+                [ngClass]="{
+                  'ng-invalid ng-dirty':
+                    projectForm.get('projectName')?.invalid &&
+                    projectForm.get('projectName')?.touched,
+                }"
+              />
+              @if (
+                projectForm.get('projectName')?.touched && projectForm.get('projectName')?.errors;
+                as e
+              ) {
+                <small class="text-red-500 block mt-1">
+                  @if (e['required']) {
+                    <span>Proje adı zorunludur.</span>
+                  }
+                  @if (e['minlength']) {
+                    <span>Proje adı en az 3 karakter olmalıdır.</span>
+                  }
+                  @if (e['maxlength']) {
+                    <span>Proje adı 150 karakteri geçemez.</span>
+                  }
+                </small>
+              }
+            </div>
+          </div>
+
+          <!-- Başlangıç Tarihi -->
+          <div>
+            <label for="startDate" class="block text-sm font-semibold text-gray-700 mb-2"
+              >Başlangıç Tarihi <span class="text-red-500">*</span></label
+            >
+            <div class="relative flex items-center group">
+              <i
+                class="fa-solid fa-calendar-days absolute left-4 text-gray-400 z-10 pointer-events-none"
+              ></i>
+              <input
+                id="startDate"
+                type="text"
+                pInputText
+                formControlName="startDate"
+                placeholder="31.12.2024"
+                maxlength="10"
+                inputmode="numeric"
+                (input)="onDateInput($event, 'startDate')"
+                class="w-full !pl-14 !pr-12 py-3 border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all"
+                [ngClass]="{
+                  'ng-invalid ng-dirty':
+                    projectForm.get('startDate')?.invalid && projectForm.get('startDate')?.touched,
+                }"
+              />
+              @if (
+                projectForm.get('startDate')?.touched && projectForm.get('startDate')?.errors;
+                as e
+              ) {
+                <small class="text-red-500 block mt-1 ml-1">
+                  @if (e['required']) {
+                    <span>Başlangıç tarihi zorunludur.</span>
+                  }
+                  @if (e['dateFormat']) {
+                    <span>Tarih GG.AA.YYYY formatında olmalıdır.</span>
+                  }
+                  @if (e['dateInvalid']) {
+                    <span>Geçersiz takvim tarihi.</span>
+                  }
+                  @if (e['dateYearRange']) {
+                    <span>Yıl 1900-2099 aralığında olmalıdır.</span>
+                  }
+                </small>
+              }
+              <!-- Takvim Tetikleyici İkon -->
+              <button
+                type="button"
+                (click)="sdp.toggle()"
+                aria-label="Başlangıç tarihi takvimini aç"
+                class="absolute right-3 p-2 text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer z-20"
+              >
+                <i class="fa-solid fa-calendar-alt text-lg"></i>
+              </button>
+              <!-- Gizli DatePicker (Sadece popup için) -->
+              <p-datepicker
+                #sdp
+                [showIcon]="false"
+                [showOnFocus]="false"
+                appendTo="body"
+                (onSelect)="onDateSelect($event, 'startDate')"
+                styleClass="hidden-datepicker"
+              >
+              </p-datepicker>
+            </div>
+          </div>
+
+          <!-- Bitiş Tarihi -->
+          <div>
+            <label for="endDate" class="block text-sm font-semibold text-gray-700 mb-2"
+              >Bitiş Tarihi (Opsiyonel)</label
+            >
+            <div class="relative flex items-center group">
+              <i
+                class="fa-solid fa-calendar-check absolute left-4 text-gray-400 z-10 pointer-events-none"
+              ></i>
+              <input
+                id="endDate"
+                type="text"
+                pInputText
+                formControlName="endDate"
+                placeholder="31.12.2025"
+                maxlength="10"
+                inputmode="numeric"
+                (input)="onDateInput($event, 'endDate')"
+                class="w-full !pl-14 !pr-12 py-3 border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all"
+              />
+              @if (
+                projectForm.get('endDate')?.touched && projectForm.get('endDate')?.errors;
+                as e
+              ) {
+                <small class="text-red-500 block mt-1 ml-1">
+                  @if (e['dateFormat']) {
+                    <span>Tarih GG.AA.YYYY formatında olmalıdır.</span>
+                  }
+                  @if (e['dateInvalid']) {
+                    <span>Geçersiz takvim tarihi.</span>
+                  }
+                  @if (e['dateYearRange']) {
+                    <span>Yıl 1900-2099 aralığında olmalıdır.</span>
+                  }
+                </small>
+              }
+              @if (projectForm.errors?.['endBeforeStart'] && projectForm.get('endDate')?.touched) {
+                <small class="text-red-500 block mt-1 ml-1">
+                  Bitiş tarihi başlangıçtan önce olamaz.
+                </small>
+              }
+              <button
+                type="button"
+                (click)="edp.toggle()"
+                aria-label="Bitiş tarihi takvimini aç"
+                class="absolute right-3 p-2 text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer z-20"
+              >
+                <i class="fa-solid fa-calendar-alt text-lg"></i>
+              </button>
+              <p-datepicker
+                #edp
+                [showIcon]="false"
+                [showOnFocus]="false"
+                appendTo="body"
+                (onSelect)="onDateSelect($event, 'endDate')"
+                styleClass="hidden-datepicker"
+              >
+              </p-datepicker>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Kolon: Detaylar ve İlişkiler -->
+        <div class="space-y-6">
+          <!-- Proje Sahibi (Owner) -->
+          <div>
+            <label for="ownerId" class="block text-sm font-semibold text-gray-700 mb-2"
+              >Proje Sahibi <span class="text-red-500">*</span></label
+            >
+            <p-select
+              inputId="ownerId"
+              [options]="users"
+              formControlName="ownerId"
+              optionValue="id"
+              optionLabel="fullName"
+              placeholder="Sorumlu Seçin"
+              [style]="{ width: '100%' }"
+              [ngClass]="{
+                'ng-invalid ng-dirty':
+                  projectForm.get('ownerId')?.invalid && projectForm.get('ownerId')?.touched,
+              }"
+            >
+              <!-- Seçili Öğe Görünümü -->
+              <ng-template pTemplate="selectedItem" let-selectedOption>
+                @if (selectedOption) {
+                  <div class="flex flex-col">
+                    <span class="font-medium">{{ selectedOption.fullName }}</span>
+                    <span class="text-xs text-slate-500">
+                      {{ selectedOption.role?.name || selectedOption.title || 'Personel' }}
+                    </span>
+                  </div>
+                }
+              </ng-template>
+
+              <!-- Liste Öğe Görünümü (Title ve Role Geri Geldi) -->
+              <ng-template let-user pTemplate="item">
+                <div class="flex flex-col py-1">
+                  <span class="font-bold text-slate-800">{{ user.fullName }}</span>
+                  <div class="flex items-center gap-2 text-xs text-blue-600">
+                    <span class="bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                      {{ user.role?.name || user.title || 'Personel' }}
+                    </span>
+                    <span class="text-slate-400 italic">{{ user.title || '-' }}</span>
+                  </div>
+                </div>
+              </ng-template>
+            </p-select>
+          </div>
+
+          <!-- Projeyi Geliştirenler (Çalışanlar) -->
+          <div>
+            <label for="workerIds" class="block text-sm font-semibold text-gray-700 mb-2"
+              >Projeyi Geliştirenler</label
+            >
+            <p-multiselect
+              inputId="workerIds"
+              [options]="users"
+              formControlName="workerIds"
+              optionLabel="fullName"
+              optionValue="id"
+              display="chip"
+              placeholder="Çalışan Seçin"
+              [showClear]="true"
+              [style]="{ width: '100%' }"
+            >
+              <ng-template pTemplate="item" let-user>
+                <div class="flex flex-col py-1">
+                  <span class="font-bold text-slate-800">{{ user.fullName }}</span>
+                  <div class="flex items-center gap-2 text-xs text-blue-600">
+                    <span class="bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                      {{ user.role?.name || user.role?.roleName || user.title || 'Personel' }}
+                    </span>
+                    <span class="text-slate-400 italic">{{ user.title || '-' }}</span>
+                  </div>
+                </div>
+              </ng-template>
+            </p-multiselect>
+            <p class="text-xs text-slate-400 mt-1">Proje sahibinden farklı geliştirenleri seçin.</p>
+          </div>
+
+          <!-- Proje Durumu -->
+          <div>
+            <label for="statusId" class="block text-sm font-semibold text-gray-700 mb-2"
+              >Durum <span class="text-red-500">*</span></label
+            >
+            <p-select
+              inputId="statusId"
+              [options]="statuses"
+              formControlName="statusId"
+              optionLabel="statusName"
+              optionValue="id"
+              placeholder="Durum Seçin"
+              [style]="{ width: '100%' }"
+              [ngClass]="{
+                'ng-invalid ng-dirty':
+                  projectForm.get('statusId')?.invalid && projectForm.get('statusId')?.touched,
+              }"
+            >
+            </p-select>
+          </div>
+
+          <!-- Kapak Görseli -->
+          <div>
+            <span class="block text-sm font-semibold text-gray-700 mb-2">Proje Kapak Görseli</span>
+            <p-fileupload
+              mode="basic"
+              chooseLabel="Resim Seç"
+              accept="image/*"
+              maxFileSize="5000000"
+              [auto]="true"
+              [disabled]="uploadingImage"
+              (onSelect)="onFileSelected($event, 'mainImageUrl')"
+              styleClass="w-full"
+            >
+            </p-fileupload>
+            @if (uploadingImage) {
+              <div class="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                <i class="fa-solid fa-spinner fa-spin"></i> Yükleniyor...
+              </div>
+            }
+            @if (!uploadingImage && projectForm.get('mainImageUrl')?.value) {
+              <div class="mt-2 flex items-center gap-3">
+                <img
+                  [src]="projectForm.get('mainImageUrl')?.value"
+                  class="w-12 h-12 rounded-lg object-cover border border-slate-200"
+                  alt="kapak"
+                />
+                <span class="text-xs text-green-600 truncate"
+                  ><i class="fa-solid fa-circle-check mr-1"></i
+                  >{{ imageFileName || 'Görsel hazır' }}</span
+                >
+              </div>
+            }
+          </div>
+
+          <!-- Kaynak Dosya -->
+          <div>
+            <span class="block text-sm font-semibold text-gray-700 mb-2"
+              >Kaynak Dosya / Doküman</span
+            >
+            <p-fileupload
+              mode="basic"
+              chooseLabel="Dosya Seç"
+              accept=".pdf,.doc,.docx,.xlsx,.xls,.zip,.txt"
+              maxFileSize="20000000"
+              [auto]="true"
+              [disabled]="uploadingResource"
+              (onSelect)="onFileSelected($event, 'resourceFileUrl')"
+              styleClass="w-full"
+            >
+            </p-fileupload>
+            @if (uploadingResource) {
+              <div class="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                <i class="fa-solid fa-spinner fa-spin"></i> Yükleniyor...
+              </div>
+            }
+            @if (!uploadingResource && projectForm.get('resourceFileUrl')?.value) {
+              <div class="mt-2 flex items-center gap-2 text-xs text-blue-600 truncate">
+                <i class="fa-solid fa-file-arrow-up"></i>
+                <a
+                  [href]="projectForm.get('resourceFileUrl')?.value"
+                  target="_blank"
+                  class="hover:underline truncate"
+                  >{{ resourceFileName || 'Dosya eklendi' }}</a
+                >
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Tam Genişlik: Açıklama -->
+        <div class="col-span-1 md:col-span-2">
+          <div class="flex justify-between items-center mb-2">
+            <label for="description" class="block text-sm font-semibold text-gray-700"
+              >Proje Açıklaması (Opsiyonel)</label
+            >
+            <span
+              class="text-xs"
+              [ngClass]="
+                projectForm.get('description')?.value?.length > 450
+                  ? 'text-red-500 font-bold'
+                  : 'text-gray-400'
+              "
+            >
+              {{ projectForm.get('description')?.value?.length || 0 }} / 500
+            </span>
+          </div>
+          <textarea
+            id="description"
+            rows="4"
+            pTextarea
+            formControlName="description"
+            maxlength="500"
+            class="w-full p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all resize-none"
+            placeholder="Projenin amacı ve hedefleri hakkında detaylı bilgi verin..."
+          >
+          </textarea>
+        </div>
+
+        <!-- Tam Genişlik: Çoklu Doküman / Foto / Pdf Ekleme -->
+        <div class="col-span-1 md:col-span-2">
+          <div class="flex items-center justify-between mb-3">
+            <span class="block text-sm font-semibold text-gray-700">
+              <i class="fa-solid fa-images text-indigo-500 mr-1"></i>
+              Ek Dokümanlar / Görseller / PDF (Opsiyonel)
+            </span>
+            <button
+              pButton
+              type="button"
+              icon="fa-solid fa-plus"
+              label="Doküman Ekle"
+              class="p-button-sm p-button-outlined"
+              (click)="addDocumentRow()"
+            ></button>
+          </div>
+
+          <div formArrayName="documents" class="flex flex-col gap-3">
+            @for (docCtrl of documents.controls; track docCtrl; let i = $index) {
+              <div
+                [formGroupName]="i"
+                class="border border-slate-200 rounded-xl p-3 bg-slate-50 flex flex-col md:flex-row gap-3 items-start"
+              >
+                <!-- Dosya seçici -->
+                <div class="md:w-56 w-full flex flex-col gap-2">
+                  <p-fileupload
+                    mode="basic"
+                    chooseLabel="Dosya Seç"
+                    accept="image/*,.pdf,.doc,.docx,.xlsx,.xls,.zip,.txt"
+                    maxFileSize="20000000"
+                    [auto]="true"
+                    (onSelect)="onDocumentFileSelected($event, i)"
+                    styleClass="w-full"
+                  >
+                  </p-fileupload>
+                  @if (docCtrl.get('fileUrl')?.value; as fileUrl) {
+                    @if (docCtrl.get('fileType')?.value === 'image') {
+                      <a [href]="fileUrl" target="_blank" class="block">
+                        <img
+                          [src]="fileUrl"
+                          class="w-full h-24 object-cover rounded-lg border border-slate-200 hover:opacity-80 transition"
+                          alt="önizleme"
+                        />
+                      </a>
+                    } @else {
+                      <a
+                        [href]="fileUrl"
+                        target="_blank"
+                        class="flex items-center gap-2 text-xs text-indigo-600 hover:underline truncate"
+                      >
+                        <i
+                          class="fa-solid"
+                          [ngClass]="{
+                            'fa-file-pdf': docCtrl.get('fileType')?.value === 'pdf',
+                            'fa-file-lines': docCtrl.get('fileType')?.value === 'document',
+                            'fa-file': docCtrl.get('fileType')?.value === 'other',
+                          }"
+                        ></i>
+                        <span class="truncate">{{
+                          docCtrl.get('fileName')?.value || 'Dosya hazır'
+                        }}</span>
+                      </a>
+                    }
+                  } @else {}
+                </div>
+                <!-- Açıklama -->
+                <div class="flex-1 w-full">
+                  <input
+                    pInputText
+                    type="text"
+                    formControlName="description"
+                    placeholder="Bu dosyanın açıklaması (örn: Veritabanı şeması)"
+                    maxlength="250"
+                    class="w-full"
+                  />
+                </div>
+                <!-- Sil -->
+                <button
+                  pButton
+                  type="button"
+                  icon="fa-solid fa-trash"
+                  class="p-button-text p-button-danger p-button-sm"
+                  (click)="removeDocumentRow(i)"
+                  pTooltip="Bu satırı sil"
+                  aria-label="Bu satırı sil"
+                ></button>
+              </div>
+            }
+
+            @if (documents.controls.length === 0) {
+              <div>
+                <p class="text-xs text-slate-400 italic">
+                  Henüz ek doküman yok. "Doküman Ekle" ile birden fazla foto, PDF veya dosya
+                  ekleyebilir, her birine açıklama yazabilirsiniz.
+                </p>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Butonlar -->
+      <div class="mt-8 flex justify-end gap-3">
+        <button
+          pButton
+          type="button"
+          label="Vazgeç"
+          icon="fa-solid fa-xmark"
+          class="p-button-outlined p-button-secondary font-semibold"
+          (click)="router.navigate(['/projects'])"
+        ></button>
+        <button
+          pButton
+          type="submit"
+          [label]="auth.isAdmin() ? 'Projeyi Kaydet' : 'Projeyi Öner'"
+          icon="fa-solid fa-check"
+          class="p-button-lg shadow-lg font-bold tracking-wide"
+          [loading]="saving"
+          [disabled]="projectForm.invalid || saving"
+        ></button>
+      </div>
+    </form>
+  </div>
+</div>

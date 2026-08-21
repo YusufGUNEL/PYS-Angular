@@ -1,0 +1,97 @@
+<p-toast />
+
+<div class="flex flex-col gap-6">
+  <!-- Başlık & Arama -->
+  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <h2 class="text-2xl md:text-3xl font-bold text-slate-800 flex items-center gap-3">
+        <i class="fa-solid fa-people-group text-sky-600"></i>
+        Çalışan Proje Dağılımı
+      </h2>
+      <p class="text-slate-500 mt-1">
+        Kimin hangi projede, hangi rolde çalıştığını kart görünümünde inceleyin.
+      </p>
+    </div>
+    <div class="relative w-full md:w-80">
+      <i
+        class="fa-solid fa-magnifying-glass search-icon absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+      ></i>
+      <input
+        pInputText
+        type="text"
+        class="w-full search-input pl-12"
+        placeholder="İsim, rol veya proje ara"
+        [(ngModel)]="searchText"
+        (input)="onSearchChange()"
+        autocomplete="off"
+      />
+    </div>
+  </div>
+
+  <!-- Yükleniyor / Boş Durum -->
+  @if (loading) {
+    <div class="text-center text-slate-500 py-16">
+      <i class="fa-solid fa-spinner fa-spin text-4xl"></i>
+      <p class="mt-3">Çalışan verileri yükleniyor...</p>
+    </div>
+  } @else {
+    @if (filteredSummaries.length === 0) {
+      <div class="text-center p-16 bg-white rounded-2xl shadow text-slate-400 italic">
+        <i class="fa-solid fa-folder-open text-4xl mb-3 block"></i>
+        Henüz çalışan ataması bulunmuyor.
+      </div>
+    } @else {
+      <!-- Responsive Kart Grid: 1 kolon mobilde, 2 tablette, 3 büyük ekranda -->
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        @for (worker of filteredSummaries; track worker.userId) {
+          <div
+            class="bg-white rounded-2xl shadow-md hover:shadow-xl transition border border-slate-100 overflow-hidden flex flex-col"
+          >
+            <!-- Personel başlığı -->
+            <div
+              class="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-indigo-50 to-sky-50 border-b border-slate-100"
+            >
+              <div
+                class="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center text-lg font-bold shadow"
+              >
+                {{ (worker.fullName || 'P').charAt(0).toUpperCase() }}
+              </div>
+              <div class="flex flex-col flex-1 min-w-0">
+                <span class="font-bold text-slate-800 truncate">{{ worker.fullName || '—' }}</span>
+                <span class="text-xs text-slate-500 truncate">{{ worker.title || '—' }}</span>
+              </div>
+              <span
+                class="text-xs px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 font-semibold"
+              >
+                {{ worker.projectItems.length }} proje
+              </span>
+            </div>
+            <!-- Proje listesi -->
+            <div class="flex flex-col gap-2 p-4 flex-1">
+              @if (worker.projectItems.length > 0) {
+                @for (proj of worker.projectItems; track proj.id) {
+                  <div
+                    class="flex items-start justify-between gap-2 p-2 rounded-lg hover:bg-slate-50 transition"
+                  >
+                    <div class="flex flex-col min-w-0 flex-1">
+                      <span class="text-sm font-semibold text-slate-800 truncate">{{
+                        proj.name
+                      }}</span>
+                      <span class="text-xs text-slate-500 truncate">{{ proj.role }}</span>
+                    </div>
+                    <p-tag
+                      [value]="proj.status || 'Bilinmiyor'"
+                      [severity]="getStatusSeverity(proj.status)"
+                    />
+                  </div>
+                }
+              } @else {
+                <span class="text-sm text-slate-400 italic">Atanmış proje yok.</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

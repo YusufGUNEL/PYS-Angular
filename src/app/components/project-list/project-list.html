@@ -1,0 +1,276 @@
+<p-toast />
+
+<div class="flex flex-col gap-6">
+  <!-- Başlık -->
+  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <h2 class="text-3xl font-bold text-slate-800 flex items-center gap-3">
+        <i class="fa-solid fa-diagram-project text-indigo-600"></i>
+        Proje Portföyü
+      </h2>
+      <p class="text-slate-500 mt-1">Sistemdeki tüm projelerin listesi</p>
+    </div>
+    <div class="flex items-center gap-3 w-full md:w-auto">
+      <div class="relative w-full md:w-80">
+        <i
+          class="fa-solid fa-magnifying-glass search-icon absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+        ></i>
+        <input
+          pInputText
+          type="text"
+          class="w-full search-input"
+          placeholder="Genel arama"
+          #globalFilter
+          (input)="projectsTable.filterGlobal(globalFilter.value, 'contains')"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Tablo -->
+  <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+    <p-table
+      #projectsTable
+      [value]="projects"
+      [loading]="loading"
+      [rows]="10"
+      [paginator]="true"
+      [filterDelay]="0"
+      [globalFilterFields]="[
+        'projectName',
+        'description',
+        'owner.fullName',
+        'status.statusName',
+        'startDate',
+        'endDate',
+        'myRole',
+      ]"
+      responsiveLayout="scroll"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 70px">Kapak</th>
+          <th pSortableColumn="projectName">Proje Adı <p-sortIcon field="projectName" /></th>
+          <th>Sorumlu</th>
+          <th pSortableColumn="startDate">Başlangıç <p-sortIcon field="startDate" /></th>
+          @if (!auth.isAdmin()) {
+            <th>Rolüm</th>
+          }
+          <th>Durum</th>
+          <th style="width: 180px" class="text-center">İşlemler</th>
+        </tr>
+        <tr>
+          <th></th>
+          <th>
+            <input
+              pInputText
+              type="text"
+              class="w-full p-inputtext-sm"
+              placeholder="Proje ara"
+              #projectNameFilter
+              (input)="projectsTable.filter(projectNameFilter.value, 'projectName', 'contains')"
+              autocomplete="off"
+            />
+          </th>
+          <th>
+            <input
+              pInputText
+              type="text"
+              class="w-full p-inputtext-sm"
+              placeholder="Sorumlu ara"
+              #ownerFilter
+              (input)="projectsTable.filter(ownerFilter.value, 'owner.fullName', 'contains')"
+              autocomplete="off"
+            />
+          </th>
+          <th>
+            <input
+              pInputText
+              type="text"
+              class="w-full p-inputtext-sm"
+              placeholder="Tarih ara"
+              #startDateFilter
+              (input)="projectsTable.filter(startDateFilter.value, 'startDate', 'contains')"
+              autocomplete="off"
+            />
+          </th>
+          @if (!auth.isAdmin()) {
+            <th>
+              <input
+                pInputText
+                type="text"
+                class="w-full p-inputtext-sm"
+                placeholder="Rol ara"
+                #myRoleFilter
+                (input)="projectsTable.filter(myRoleFilter.value, 'myRole', 'contains')"
+                autocomplete="off"
+              />
+            </th>
+          }
+          <th>
+            <input
+              pInputText
+              type="text"
+              class="w-full p-inputtext-sm"
+              placeholder="Durum ara"
+              #statusFilter
+              (input)="projectsTable.filter(statusFilter.value, 'status.statusName', 'contains')"
+              autocomplete="off"
+            />
+          </th>
+          <th></th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-project>
+        <tr>
+          <!-- Kapak Görseli -->
+          <td>
+            <div
+              class="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center"
+            >
+              @if (project.mainImageUrl) {
+                <img [src]="project.mainImageUrl" class="w-full h-full object-cover" alt="kapak" />
+              } @else {
+                <i class="fa-solid fa-image text-slate-300 text-xl"></i>
+              }
+            </div>
+          </td>
+          <!-- Proje Adı + Açıklama (uzunsa tooltip ile tam metin) -->
+          <td>
+            <div class="font-bold text-slate-800">{{ project.projectName }}</div>
+            <div
+              class="text-xs text-slate-400 truncate"
+              style="max-width: 260px"
+              [pTooltip]="project.description || ''"
+              [tooltipDisabled]="!project.description"
+              tooltipPosition="bottom"
+            >
+              {{ project.description || '—' }}
+            </div>
+          </td>
+          <!-- Sorumlu -->
+          <td>
+            <div class="flex items-center gap-2">
+              <div
+                class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold"
+              >
+                {{ (project.owner?.fullName || 'P').charAt(0).toUpperCase() }}
+              </div>
+              <span class="text-sm">{{ project.owner?.fullName || '—' }}</span>
+            </div>
+          </td>
+          <!-- Tarih -->
+          <td>
+            <span class="text-sm text-slate-600">
+              {{ project.startDate | date: 'dd.MM.yyyy' }}
+            </span>
+          </td>
+          @if (!auth.isAdmin()) {
+            <td>
+              <span class="text-sm text-slate-600">
+                {{ project.isOwner ? 'Proje Sahibi' : project.myRole || 'Çalışan' }}
+              </span>
+            </td>
+          }
+          <!-- Durum -->
+          <td>
+            <div class="flex flex-col gap-1 items-start">
+              <p-tag
+                [value]="project.status?.statusName || 'Bilinmiyor'"
+                [severity]="getStatusSeverity(project.status?.statusName)"
+              />
+              @if (project.approvalStatus === 'Pending') {
+                <p-tag value="Onay Bekliyor" severity="warn" [rounded]="true"></p-tag>
+              }
+              @if (project.approvalStatus === 'Rejected') {
+                <p-tag value="Reddedildi" severity="danger" [rounded]="true"></p-tag>
+              }
+            </div>
+          </td>
+          <!-- İşlemler -->
+          <td class="text-center">
+            <div class="flex justify-center gap-1">
+              @if (auth.isAdmin() && project.approvalStatus === 'Pending') {
+                <button
+                  pButton
+                  icon="fa-solid fa-check"
+                  class="p-button-rounded p-button-text p-button-success"
+                  pTooltip="Onayla"
+                  aria-label="Onayla"
+                  tooltipPosition="top"
+                  (click)="approveProject(project)"
+                ></button>
+                <button
+                  pButton
+                  icon="fa-solid fa-xmark"
+                  class="p-button-rounded p-button-text p-button-danger"
+                  pTooltip="Reddet"
+                  aria-label="Reddet"
+                  tooltipPosition="top"
+                  (click)="rejectProject(project)"
+                ></button>
+              }
+
+              <button
+                pButton
+                icon="fa-solid fa-images"
+                class="p-button-rounded p-button-text p-button-secondary"
+                pTooltip="Dokümanları / Galeriyi Aç"
+                aria-label="Dokümanları / Galeriyi Aç"
+                tooltipPosition="top"
+                (click)="viewResources(project)"
+              ></button>
+              <button
+                pButton
+                icon="fa-solid fa-note-sticky"
+                class="p-button-rounded p-button-text p-button-secondary"
+                pTooltip="Kişisel Notlar"
+                aria-label="Kişisel Notlar"
+                tooltipPosition="top"
+                (click)="viewNotes(project)"
+              ></button>
+              @if (auth.isAdmin()) {
+                <button
+                  pButton
+                  icon="fa-solid fa-pen-to-square"
+                  class="p-button-rounded p-button-text p-button-secondary"
+                  pTooltip="Düzenle"
+                  aria-label="Düzenle"
+                  tooltipPosition="top"
+                  (click)="editProject(project)"
+                ></button>
+                <button
+                  pButton
+                  icon="fa-solid fa-trash-can"
+                  class="p-button-rounded p-button-text p-button-danger"
+                  pTooltip="Sil"
+                  aria-label="Sil"
+                  tooltipPosition="top"
+                  (click)="deleteProject(project)"
+                ></button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          @if (auth.isAdmin()) {
+            <td colspan="6" class="text-center p-10 text-slate-400 italic">
+              <i class="fa-solid fa-folder-open text-4xl mb-3 block"></i>
+              Henüz proje eklenmemiş. Yeni proje ekleyerek başlayın!
+            </td>
+          } @else {
+            <td colspan="7" class="text-center p-10 text-slate-400 italic">
+              <i class="fa-solid fa-folder-open text-4xl mb-3 block"></i>
+              Size atanmış veya dahil olduğunuz proje bulunmuyor.
+            </td>
+          }
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

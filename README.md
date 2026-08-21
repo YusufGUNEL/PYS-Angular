@@ -1,59 +1,157 @@
-# PYSAngular
+# PYS — Proje Yönetim Sistemi (Frontend)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.8.
+Belediye yazılım ekibinin **proje, personel, doküman, dilekçe ve sohbet** akışını tek panelden yöneten Angular uygulaması.
 
-## Development server
+Rol tabanlı yetkilendirme (Admin / Personel), JWT oturum yönetimi ve SignalR ile gerçek zamanlı mesajlaşma içerir.
+Backend ayrı bir depodadır: **[PYS — ASP.NET Core Web API](https://github.com/YusufGUNEL/PYS)**
 
-To start a local development server, run:
+![CI](https://github.com/YusufGUNEL/PYS-Angular/actions/workflows/ci.yml/badge.svg)
+![Angular](https://img.shields.io/badge/Angular-21-dd0031)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6)
+![Tests](https://img.shields.io/badge/tests-98%20passing-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-blue)
 
-```bash
-ng serve
+<p align="center">
+  <img src="docs/screenshots/projects.png" alt="Proje portföyü ekranı" width="900">
+</p>
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/chat.png" alt="SignalR tabanlı sohbet ekranı"></td>
+    <td width="50%"><img src="docs/screenshots/workers.png" alt="Çalışan proje dağılımı ekranı"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Gerçek zamanlı sohbet (SignalR)</sub></td>
+    <td align="center"><sub>Çalışan proje dağılımı</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/users.png" alt="Personel listesi ekranı"></td>
+    <td><img src="docs/screenshots/login.png" alt="Giriş ekranı"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Personel listesi (filtre + sayfalama)</sub></td>
+    <td align="center"><sub>Giriş</sub></td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="docs/screenshots/mobile.png" alt="Mobil görünüm" width="320"><br>
+  <sub>Mobil görünüm — açılır menü ve yığılan kartlar</sub>
+</p>
+
+---
+
+## Öne Çıkanlar
+
+|                                       |                                                                                                                                                                                     |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Rol tabanlı erişim**                | Rotalar `authGuard` / `adminGuard` / `nonAdminGuard` ile korunur; menü, `AuthService` signal'larına göre kendini kurar.                                                             |
+| **Oturum güvenliği**                  | JWT `localStorage`'da tutulur, **2 saatlik istemci tavanı** uygulanır (sunucu süresi daha uzun olsa bile), süre dolunca otomatik çıkış yapılır, 401'de interceptor oturumu kapatır. |
+| **Gerçek zamanlı sohbet**             | SignalR hub'ı üzerinden bireysel/grup mesajlaşma, "yazıyor…" göstergesi, okundu bilgisi ve otomatik yeniden bağlanma.                                                               |
+| **Tembel yükleme**                    | Her rota `loadComponent` ile ayrı parçaya bölünür — ilk yük **748 kB** (sıkıştırılmış ~171 kB).                                                                                     |
+| **Kaydedilmemiş değişiklik koruması** | Form kirliyken sayfadan çıkışta `unsavedChangesGuard` onay ister.                                                                                                                   |
+| **Erişilebilirlik**                   | Tüm form alanları etiketiyle eşleşir, ikon butonlarının erişilebilir adı vardır, liste öğeleri klavyeyle gezilebilir (`angular-eslint` a11y kuralları CI'da zorunlu).               |
+
+## Teknoloji Yığını
+
+- **Angular 21** — standalone bileşenler, `inject()`, signal'lar, `@if`/`@for` blok sözdizimi, fonksiyonel guard ve interceptor'lar
+- **PrimeNG 21** + **TailwindCSS 4** — arayüz (Aura teması, marka rengine göre özelleştirilmiş)
+- **@microsoft/signalr** — gerçek zamanlı sohbet
+- **RxJS** — reaktif servis katmanı
+- **Vitest** + `HttpTestingController` — birim testler
+- **ESLint (angular-eslint)** + **Prettier** — kod kalitesi
+
+## Rotalar ve Yetkiler
+
+| Rota               | Bileşen                   | Erişim                                                       |
+| ------------------ | ------------------------- | ------------------------------------------------------------ |
+| `/login`           | `LoginComponent`          | Herkes                                                       |
+| `/projects`        | `ProjectListComponent`    | Girişi olan (admin tümünü, personel kendi projelerini görür) |
+| `/project-add`     | `ProjectAddComponent`     | Girişi olan                                                  |
+| `/profile`         | `ProfileComponent`        | Girişi olan                                                  |
+| `/chat`            | `ChatComponent`           | Girişi olan                                                  |
+| `/users`           | `UserListComponent`       | Yalnızca Admin                                               |
+| `/user-add`        | `UserAddComponent`        | Yalnızca Admin                                               |
+| `/project-workers` | `ProjectWorkersComponent` | Yalnızca Admin                                               |
+| `/petitions`       | `PetitionsAdminComponent` | Yalnızca Admin                                               |
+| `/my-petitions`    | `MyPetitionsComponent`    | Yalnızca personel                                            |
+
+Rota korumalarının doğruluğu `src/app/app.routes.spec.ts` içindeki testlerle sürekli denetlenir.
+
+## Proje Yapısı
+
+```
+src/app/
+├── components/      # Her ekran için bir klasör (.ts + .html [+ .css])
+├── services/        # API istemcileri, auth durumu, SignalR
+├── guards/          # authGuard, adminGuard, nonAdminGuard, unsavedChangesGuard
+├── models/          # HTTP sözleşmeleri (DTO arayüzleri)
+├── shared/          # Doğrulayıcılar, durum→renk eşlemesi gibi ortak yardımcılar
+├── environments/    # Ortam ayarları (API adresi çalışma zamanında okunur)
+├── app.routes.ts    # Tembel yüklenen rota tanımları
+└── app.config.ts    # Sağlayıcılar: router, http+interceptor, PrimeNG teması
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Kurulum
 
-## Code scaffolding
+**Gereksinimler:** Node.js 20.19+ · npm 11+ · çalışan PYS Backend API'si (varsayılan `http://localhost:5058`)
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+> Backend'in bağlantı dizesi, MinIO anahtarları ve JWT imza anahtarı depoda tutulmaz.
+> `appsettings.Local.json.example` dosyasını `appsettings.Local.json` olarak kopyalayıp doldurun
+> (ayrıntı: backend README).
 
 ```bash
-ng generate --help
+npm install
+npm start          # http://localhost:4200
 ```
 
-## Building
+## Komutlar
 
-To build the project run:
+| Komut             | Açıklama                            |
+| ----------------- | ----------------------------------- |
+| `npm start`       | Geliştirme sunucusu                 |
+| `npm run build`   | Üretim derlemesi (`dist/`)          |
+| `npm test`        | Vitest izleme modunda               |
+| `npm run test:ci` | Testleri tek seferlik çalıştırır    |
+| `npm run lint`    | ESLint (TypeScript + şablon + a11y) |
+| `npm run format`  | Prettier ile biçimlendirir          |
+
+## API Adresi Yapılandırması
+
+API adresi **derleme sonrası** değiştirilebilir: `public/assets/env.js` dosyası çalışma zamanında okunur.
+
+```js
+// public/assets/env.js
+window.__env = { apiUrl: 'http://localhost:5058' };
+```
+
+`environment.ts` bu değeri okur, bulunamazsa `http://localhost:5058` adresine düşer. Böylece aynı `dist/` çıktısı farklı sunuculara yeniden derlemeden dağıtılabilir — bu yüzden ayrı bir `environment.prod.ts` tutulmuyor.
+
+## Test
 
 ```bash
-ng build
+npm run test:ci
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+98 test, 12 dosya. Kapsam: oturum yaşam döngüsü (süre tavanı, otomatik çıkış, önbellek penceresi), HTTP interceptor (başlık ekleme, 401 davranışı), üç rota guard'ı, rota koruma matrisi, servis uçları, form doğrulayıcıları, rol bazlı menü kurulumu ve mobil menü davranışı.
 
-## Running unit tests
+## Sürekli Entegrasyon
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+`.github/workflows/ci.yml` her push ve PR'da şu adımları çalıştırır:
 
-```bash
-ng test
-```
+`format:check` → `lint` → `test:ci` → `build`
 
-## Running end-to-end tests
+Üretim derlemesi ayrıca **paket boyutu bütçesiyle** sınırlanmıştır (uyarı 850 kB, hata 1.2 MB); tembel yükleme bozulursa CI kırmızıya döner.
 
-For end-to-end (e2e) testing, run:
+## Varsayılan Hesaplar (backend seed)
 
-```bash
-ng e2e
-```
+| E-posta                         | Şifre       | Rol      |
+| ------------------------------- | ----------- | -------- |
+| `admin@pys.local`               | `Admin123!` | Admin    |
+| `mehmet.yildiz@belediye.gov.tr` | `123456`    | Personel |
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+> Bunlar yalnızca yerel geliştirme içindir; canlı ortamda ilk açılışta değiştirilmelidir.
 
-## Additional Resources
+## Lisans
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+MIT — bkz. [LICENSE](LICENSE).
