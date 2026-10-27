@@ -8,7 +8,7 @@ Backend ayrı bir depodadır: **[PYS — ASP.NET Core Web API](https://github.co
 ![CI](https://github.com/YusufGUNEL/PYS-Angular/actions/workflows/ci.yml/badge.svg)
 ![Angular](https://img.shields.io/badge/Angular-21-dd0031)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6)
-![Tests](https://img.shields.io/badge/tests-98%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-104%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 <p align="center">
@@ -48,7 +48,7 @@ Backend ayrı bir depodadır: **[PYS — ASP.NET Core Web API](https://github.co
 | **Rol tabanlı erişim**                | Rotalar `authGuard` / `adminGuard` / `nonAdminGuard` ile korunur; menü, `AuthService` signal'larına göre kendini kurar.                                                             |
 | **Oturum güvenliği**                  | JWT `localStorage`'da tutulur, **2 saatlik istemci tavanı** uygulanır (sunucu süresi daha uzun olsa bile), süre dolunca otomatik çıkış yapılır, 401'de interceptor oturumu kapatır. |
 | **Gerçek zamanlı sohbet**             | SignalR hub'ı üzerinden bireysel/grup mesajlaşma, "yazıyor…" göstergesi, okundu bilgisi ve otomatik yeniden bağlanma.                                                               |
-| **Tembel yükleme**                    | Her rota `loadComponent` ile ayrı parçaya bölünür — ilk yük **748 kB** (sıkıştırılmış ~171 kB).                                                                                     |
+| **Tembel yükleme**                    | Her rota `loadComponent` ile ayrı parçaya bölünür — ilk yük **754 kB** (sıkıştırılmış ~173 kB).                                                                                     |
 | **Kaydedilmemiş değişiklik koruması** | Form kirliyken sayfadan çıkışta `unsavedChangesGuard` onay ister.                                                                                                                   |
 | **Erişilebilirlik**                   | Tüm form alanları etiketiyle eşleşir, ikon butonlarının erişilebilir adı vardır, liste öğeleri klavyeyle gezilebilir (`angular-eslint` a11y kuralları CI'da zorunlu).               |
 
@@ -133,7 +133,7 @@ window.__env = { apiUrl: 'http://localhost:5058' };
 npm run test:ci
 ```
 
-98 test, 12 dosya. Kapsam: oturum yaşam döngüsü (süre tavanı, otomatik çıkış, önbellek penceresi), HTTP interceptor (başlık ekleme, 401 davranışı), üç rota guard'ı, rota koruma matrisi, servis uçları, form doğrulayıcıları, rol bazlı menü kurulumu ve mobil menü davranışı.
+104 test, 13 dosya. Kapsam: oturum yaşam döngüsü (süre tavanı, otomatik çıkış, önbellek penceresi), HTTP interceptor (başlık ekleme, 401 davranışı), üç rota guard'ı, rota koruma matrisi, servis uçları, form doğrulayıcıları, rol bazlı menü kurulumu ve mobil menü davranışı.
 
 ## Sürekli Entegrasyon
 
